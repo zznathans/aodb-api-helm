@@ -20,5 +20,5 @@ helm unittest charts/aodb-api
 ```
 
 Published via chart-releaser to this repo's `gh-pages` branch on every
-GitHub Release; consumed from `zznathans/charts` (ArgoCD) as a normal
-dependency, the same way `bebot-helm` is.
+GitHub Release; deployed via ArgoCD from this organization's internal
+GitOps repo as a normal chart dependency, the same way `bebot-helm` is.

@@ -1,0 +1,84 @@
+name: Prepare Release
+
+# Stage 1 of 2. main requires every change to go through a PR, so
+# semantic-release can no longer push its version-bump commit straight to
+# main. Splitting into two stages instead (same pattern as bebot-helm):
+#
+#   1. (this workflow) Computes the next version via a dry-run
+#      semantic-release (no push), bumps Chart.yaml, and opens a normal PR
+#      for it.
+#   2. cut-release.yaml fires once that PR is merged and actually creates
+#      the version tag + GitHub Release (via the GitHub API, not a git
+#      push - so the branch ruleset never applies to it) from that
+#      already-correct commit.
+#
+# helm.yaml (unchanged) publishes the chart once cut-release.yaml's GitHub
+# Release fires.
+#
+# Both workflows fire off the same CI-success-on-main signal, so this one
+# explicitly skips a release-bump merge itself (message starts with
+# "chore(release):", or contains "/release/" for the default merge-commit
+# message style) and leaves that to cut-release.yaml - otherwise the two
+# would race on the same commit.
+on:
+  workflow_run:
+    workflows: ["CI"]
+    branches: [main]
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  prepare:
+    name: Compute next version and open a bump PR
+    runs-on: ubuntu-latest
+    if: |
+      github.event.workflow_run.conclusion == 'success' &&
+      !contains(github.event.workflow_run.head_commit.message, '[skip ci]') &&
+      !startsWith(github.event.workflow_run.head_commit.message, 'chore(release):') &&
+      !contains(github.event.workflow_run.head_commit.message, '/release/')
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: main
+          token: ${{ secrets.RELEASE_PAT }}
+
+      - name: Compute next version (dry run - no push, no release)
+        id: semantic
+        uses: cycjimmy/semantic-release-action@v6
+        with:
+          semantic_version: 25
+          dry_run: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
+
+      - name: Bump Chart.yaml and open a PR
+        if: steps.semantic.outputs.new_release_published == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+          VERSION: ${{ steps.semantic.outputs.new_release_version }}
+        run: |
+          branch="release/${VERSION}"
+
+          # Idempotent: if a prepare run already opened this branch/PR, don't try again.
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null 2>&1; then
+            echo "Branch $branch already exists, assuming a prepare PR is already open."
+            exit 0
+          fi
+
+          sh scripts/bump-chart-version.sh "$VERSION"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add charts/aodb-api/Chart.yaml
+          git commit -m "chore(release): ${VERSION}"
+          git push origin "$branch"
+
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "chore(release): ${VERSION}" \
+            --body "Bumps charts/aodb-api/Chart.yaml to ${VERSION} ahead of cutting that release."
