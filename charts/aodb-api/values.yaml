@@ -3,6 +3,10 @@ aodbApi:
   # -- file). Downloaded fresh into memory on every pod start - no database, no credentials.
   dumpUrl: ""
 
+  # -- Number of pod replicas. Safe to run more than one - each replica independently loads its
+  # -- own in-memory copy of the dump from dumpUrl on startup, no shared state between them.
+  replicaCount: 1
+
   # -- Container image registry and repository for the aodb-api image.
   imageRepository: ghcr.io/zznathans/aodb-api
   # -- Image tag to deploy.

@@ -32,6 +32,23 @@ tests:
       - failedTemplate:
           errorMessage: "aodbApi.dumpUrl is required"
 
+  - it: defaults to a single replica
+    set:
+      aodbApi.dumpUrl: https://aodb-api.s3.yeetbox.net/171003.xml.zip
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 1
+
+  - it: scales up via replicaCount
+    set:
+      aodbApi.dumpUrl: https://aodb-api.s3.yeetbox.net/171003.xml.zip
+      aodbApi.replicaCount: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
   - it: runs as a non-root user with hardened security context
     set:
       aodbApi.dumpUrl: https://aodb-api.s3.yeetbox.net/171003.xml.zip
