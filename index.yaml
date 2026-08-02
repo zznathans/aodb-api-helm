@@ -2,6 +2,16 @@ apiVersion: v1
 entries:
   aodb-api:
   - apiVersion: v2
+    appVersion: 1.1.1
+    created: "2026-08-02T19:20:55.270272569Z"
+    description: Helm chart for aodb-api
+    digest: 848b872f57ad1b9c62277825864498f74b17921270d31b72364e3e0d01f3695b
+    name: aodb-api
+    type: application
+    urls:
+    - https://github.com/zznathans/aodb-api-helm/releases/download/aodb-api-1.1.1/aodb-api-1.1.1.tgz
+    version: 1.1.1
+  - apiVersion: v2
     appVersion: 1.1.0
     created: "2026-08-02T18:58:43.90152112Z"
     description: Helm chart for aodb-api
@@ -31,4 +41,4 @@ entries:
     urls:
     - https://github.com/zznathans/aodb-api-helm/releases/download/aodb-api-0.1.0/aodb-api-0.1.0.tgz
     version: 0.1.0
-generated: "2026-08-02T18:58:43.901534254Z"
+generated: "2026-08-02T19:20:55.270289711Z"
