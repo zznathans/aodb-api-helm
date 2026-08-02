@@ -1,11 +1,22 @@
 helm:
   - changed-files:
-      - any-glob-to-any-file: "charts/**"
+      - any-glob-to-any-file:
+          - "charts/aodb-api/templates/**"
+          - "charts/aodb-api/values.yaml"
+          - "charts/aodb-api/Chart.yaml"
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file: "charts/aodb-api/tests/**"
 
 ci:
   - changed-files:
       - any-glob-to-any-file: ".github/**"
 
-tests:
+scripts:
   - changed-files:
-      - any-glob-to-any-file: "charts/aodb-api/tests/**"
+      - any-glob-to-any-file: "scripts/**"
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file: "**/*.md"
