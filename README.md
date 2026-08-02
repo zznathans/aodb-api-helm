@@ -1,5 +1,8 @@
 # aodb-api-helm
 
+[![CI](https://github.com/zznathans/aodb-api-helm/actions/workflows/ci.yaml/badge.svg)](https://github.com/zznathans/aodb-api-helm/actions/workflows/ci.yaml)
+[![Release](https://img.shields.io/github/v/release/zznathans/aodb-api-helm)](https://github.com/zznathans/aodb-api-helm/releases)
+
 Helm chart for [`aodb-api`](https://github.com/zznathans/aodb-api), a
 self-hosted replacement for the `cidb.bebot.link` item-search API that
 BeBot's `!items` command relies on.
@@ -20,5 +23,5 @@ helm unittest charts/aodb-api
 ```
 
 Published via chart-releaser to this repo's `gh-pages` branch on every
-GitHub Release; consumed from `zznathans/charts` (ArgoCD) as a normal
-dependency, the same way `bebot-helm` is.
+GitHub Release; deployed via ArgoCD from this organization's internal
+GitOps repo as a normal chart dependency, the same way `bebot-helm` is.
