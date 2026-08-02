@@ -66,5 +66,30 @@ aodbApi:
     # -- Port the Service listens on and forwards to the container's 8000.
     port: 80
 
+  s3:
+    # -- Auto-import the item dump from S3 (or an S3-compatible store, e.g. Cloudflare R2) on
+    # -- startup, if the `items` table is empty. Meant for a dump that changes rarely - readiness
+    # -- is intentionally gated on this completing (see readinessProbe.initialDelaySeconds below).
+    enabled: false
+    # -- Bucket containing the dump object.
+    bucket: ""
+    # -- Object key/path of the dump within the bucket. A ".gz" suffix is auto-decompressed.
+    key: ""
+    # -- Endpoint host for non-AWS providers, without a scheme (e.g. "abc123.r2.cloudflarestorage.com").
+    # -- Leave empty to use AWS's default endpoint for the given region.
+    endpoint: ""
+    # -- Region (or "auto" for most S3-compatible providers, e.g. Cloudflare R2).
+    region: "auto"
+    # -- Name of an existing K8s Secret with access-key-id/secret-access-key keys, used when
+    # -- externalSecret.enabled is false. Required in that case.
+    credentialsSecret: ""
+    externalSecret:
+      # -- When true, create an ExternalSecret to populate the S3 credentials from the external
+      # -- store instead of requiring a pre-existing credentialsSecret.
+      enabled: false
+      # -- Name of the secret in the external store. Required when enabled is true. Must be a
+      # -- JSON object with keys: access_key (base64), secret_key (base64).
+      secretName: ""
+
   # -- Raw Kubernetes objects to render alongside chart-managed resources.
   extraObjects: []

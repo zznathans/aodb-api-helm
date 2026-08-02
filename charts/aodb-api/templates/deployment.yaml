@@ -41,6 +41,26 @@ spec:
                 secretKeyRef:
                   name: {{ .Release.Name }}-db
                   key: db_password
+            {{- if .Values.aodbApi.s3.enabled }}
+            - name: S3_BUCKET
+              value: {{ .Values.aodbApi.s3.bucket | quote }}
+            - name: S3_KEY
+              value: {{ .Values.aodbApi.s3.key | quote }}
+            - name: S3_ENDPOINT
+              value: {{ .Values.aodbApi.s3.endpoint | quote }}
+            - name: S3_REGION
+              value: {{ .Values.aodbApi.s3.region | quote }}
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.aodbApi.s3.credentialsSecret | default (printf "%s-s3-creds" .Release.Name) }}
+                  key: access-key-id
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.aodbApi.s3.credentialsSecret | default (printf "%s-s3-creds" .Release.Name) }}
+                  key: secret-access-key
+            {{- end }}
           securityContext:
             allowPrivilegeEscalation: false
             runAsNonRoot: true
@@ -55,11 +75,15 @@ spec:
             httpGet:
               path: /healthz
               port: 8000
-            initialDelaySeconds: 5
+            # A first-boot S3 import (aodbApi.s3.enabled) blocks the app from accepting
+            # connections until it completes, so this needs enough headroom for a full dump load,
+            # not just normal app startup.
+            initialDelaySeconds: {{ .Values.aodbApi.s3.enabled | ternary 30 5 }}
             periodSeconds: 10
+            failureThreshold: {{ .Values.aodbApi.s3.enabled | ternary 30 3 }}
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8000
-            initialDelaySeconds: 10
+            initialDelaySeconds: {{ .Values.aodbApi.s3.enabled | ternary 60 10 }}
             periodSeconds: 30

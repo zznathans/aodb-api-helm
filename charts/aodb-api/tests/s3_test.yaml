@@ -1,0 +1,36 @@
+suite: s3 import
+templates:
+  - deployment.yaml
+tests:
+  - it: does not set S3 env vars by default
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: S3_BUCKET
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.initialDelaySeconds
+          value: 5
+
+  - it: sets S3 env vars and longer probes when enabled
+    set:
+      aodbApi.s3.enabled: true
+      aodbApi.s3.bucket: my-bucket
+      aodbApi.s3.key: dumps/items.csv.gz
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: S3_BUCKET
+            value: "my-bucket"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: S3_KEY
+            value: "dumps/items.csv.gz"
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.initialDelaySeconds
+          value: 30
+      - equal:
+          path: spec.template.spec.containers[0].env[9].valueFrom.secretKeyRef.name
+          value: RELEASE-NAME-s3-creds
