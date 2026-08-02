@@ -1,0 +1,19 @@
+---
+apiVersion: v2
+name: aodb-api
+description: Helm chart for aodb-api
+
+type: application
+
+appVersion: 0.1.0
+version: 0.1.0
+
+dependencies:
+  - name: mariadb-operator-crds
+    version: "26.6.0"
+    repository: "https://mariadb-operator.github.io/mariadb-operator"
+    condition: aodbApi.mariadbOperator.enabled,aodbApi.mariadb.enabled
+  - name: mariadb-operator
+    version: "26.6.0"
+    repository: "https://mariadb-operator.github.io/mariadb-operator"
+    condition: aodbApi.mariadbOperator.enabled,aodbApi.mariadb.enabled

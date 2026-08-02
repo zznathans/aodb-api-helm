@@ -1,0 +1,11 @@
+helm:
+  - changed-files:
+      - any-glob-to-any-file: "charts/**"
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file: ".github/**"
+
+tests:
+  - changed-files:
+      - any-glob-to-any-file: "charts/aodb-api/tests/**"

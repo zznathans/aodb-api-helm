@@ -1,0 +1,70 @@
+aodbApi:
+  # -- Configuration for the single upstream external secret used by all ExternalSecret resources in this chart.
+  # Required keys: db_user, db_password, db_name (app DB creds); mariadb_root_password, mariadb_root_user (shared).
+  externalSecret:
+    # -- Name of the upstream secret in the external store (required when createSecret: false).
+    gcpSecretName: ""
+    # -- Name of the ClusterSecretStore or SecretStore to use.
+    secretStoreName: gcp-clusterstore
+    # -- Kind of the secret store (ClusterSecretStore or SecretStore).
+    secretStoreKind: ClusterSecretStore
+    # -- How often ExternalSecrets poll for updates.
+    secretRefreshInterval: 1h
+
+  mariadbOperator:
+    # -- Pull in the mariadb-operator and mariadb-operator-crds charts as dependencies of this
+    # -- chart. Left unset (the default), this follows aodbApi.mariadb.enabled. Set explicitly
+    # -- to false to reuse a cluster-shared operator instead of installing a second copy.
+    # enabled: true
+
+  mariadb:
+    # -- Deploy a MariaDB instance (via the mariadb-operator's MariaDB CR) as part of this chart.
+    enabled: true
+    # -- Container image for MariaDB, passed through to the MariaDB CR.
+    image: "mariadb:11.4"
+    persistence:
+      # -- Enable persistent storage for MariaDB data.
+      enabled: true
+      # -- Size of the MariaDB CR's storage volume.
+      size: 2Gi
+      # -- StorageClass to use for the volume. Leave empty to use the cluster default.
+      storageClass: ""
+    # Controls how the MariaDB root credentials secret is managed.
+    # When unset or true: a K8s Secret is created by Helm with a randomly generated password.
+    # When false: an ExternalSecret pulls mariadb_root_password/mariadb_root_user from aodbApi.externalSecret.
+    # createSecret: true
+
+  db:
+    # -- Database name the app connects to.
+    name: "aodb"
+    # -- MySQL user the app connects as.
+    user: "aodbapi"
+    # Controls how the app's DB credentials secret is managed.
+    # When true or unset: a K8s Secret is created directly by Helm using db.password below.
+    # When false: an ExternalSecret pulls db_user/db_password/db_name from aodbApi.externalSecret.
+    createSecret: true
+    # -- Required when createSecret is true.
+    # password: ""
+
+  # -- Container image registry and repository for the aodb-api image.
+  imageRepository: ghcr.io/zznathans/aodb-api
+  # -- Image tag to deploy.
+  imageTag: "0.1.0"
+  # -- List of image pull secret names to attach to the ServiceAccount. Leave empty if the registry is public.
+  imagePullSecrets: []
+
+  # -- Resource requests and limits for the app container.
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+  service:
+    # -- Port the Service listens on and forwards to the container's 8000.
+    port: 80
+
+  # -- Raw Kubernetes objects to render alongside chart-managed resources.
+  extraObjects: []

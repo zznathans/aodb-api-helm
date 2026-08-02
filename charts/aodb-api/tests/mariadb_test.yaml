@@ -1,0 +1,48 @@
+suite: mariadb CR
+templates:
+  - mariadb.yaml
+tests:
+  - it: renders a single MariaDB CR by default
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isAPIVersion:
+          of: k8s.mariadb.com/v1alpha1
+      - isKind:
+          of: MariaDB
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-mariadb
+
+  - it: renders nothing when mariadb is disabled
+    set:
+      aodbApi.mariadb.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: uses the configured mariadb image
+    set:
+      aodbApi.mariadb.image: mariadb:10.11
+    asserts:
+      - equal:
+          path: spec.image
+          value: mariadb:10.11
+
+  - it: uses persistent storage sized from values by default
+    asserts:
+      - equal:
+          path: spec.storage.size
+          value: 2Gi
+      - notExists:
+          path: spec.storage.ephemeral
+
+  - it: uses ephemeral storage when persistence is disabled
+    set:
+      aodbApi.mariadb.persistence.enabled: false
+    asserts:
+      - equal:
+          path: spec.storage.ephemeral
+          value: true
+      - notExists:
+          path: spec.storage.size

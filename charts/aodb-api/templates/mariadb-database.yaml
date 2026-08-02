@@ -1,0 +1,46 @@
+{{- if .Values.aodbApi.mariadb.enabled }}
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Database
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  mariaDbRef:
+    name: {{ .Release.Name }}-mariadb
+  name: {{ .Values.aodbApi.db.name | default "" | quote }}
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: User
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  mariaDbRef:
+    name: {{ .Release.Name }}-mariadb
+  name: {{ .Values.aodbApi.db.user | default "" | quote }}
+  passwordSecretKeyRef:
+    name: {{ .Release.Name }}-db
+    key: db_password
+  host: "%"
+---
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: Grant
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  mariaDbRef:
+    name: {{ .Release.Name }}-mariadb
+  username: {{ .Values.aodbApi.db.user | default "" | quote }}
+  host: "%"
+  database: {{ .Values.aodbApi.db.name | default "" | quote }}
+  table: "*"
+  privileges:
+    - "ALL PRIVILEGES"
+{{- end }}

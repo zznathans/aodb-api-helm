@@ -1,0 +1,31 @@
+suite: deployment
+templates:
+  - deployment.yaml
+tests:
+  - it: renders a single deployment using the configured image
+    set:
+      aodbApi.imageRepository: ghcr.io/zznathans/aodb-api
+      aodbApi.imageTag: "1.2.3"
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/zznathans/aodb-api:1.2.3
+
+  - it: points DB_HOST at the in-chart mariadb by default
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: RELEASE-NAME-mariadb
+
+  - it: runs as a non-root user with hardened security context
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.capabilities.drop[0]
+          value: ALL

@@ -1,0 +1,25 @@
+{{- if .Values.aodbApi.mariadb.enabled }}
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: MariaDB
+metadata:
+  name: {{ .Release.Name }}-mariadb
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  image: {{ .Values.aodbApi.mariadb.image }}
+  replicas: 1
+  rootPasswordSecretKeyRef:
+    name: {{ .Release.Name }}-mariadb-root
+    key: root-password
+  port: 3306
+  storage:
+    {{- if .Values.aodbApi.mariadb.persistence.enabled }}
+    size: {{ .Values.aodbApi.mariadb.persistence.size | default "2Gi" }}
+    {{- if .Values.aodbApi.mariadb.persistence.storageClass }}
+    storageClassName: {{ .Values.aodbApi.mariadb.persistence.storageClass }}
+    {{- end }}
+    {{- else }}
+    ephemeral: true
+    {{- end }}
+{{- end }}
