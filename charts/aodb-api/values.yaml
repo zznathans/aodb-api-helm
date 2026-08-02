@@ -1,50 +1,7 @@
 aodbApi:
-  # -- Configuration for the single upstream external secret used by all ExternalSecret resources in this chart.
-  # Required keys: db_user, db_password, db_name (app DB creds); mariadb_root_password, mariadb_root_user (shared).
-  externalSecret:
-    # -- Name of the upstream secret in the external store (required when createSecret: false).
-    gcpSecretName: ""
-    # -- Name of the ClusterSecretStore or SecretStore to use.
-    secretStoreName: gcp-clusterstore
-    # -- Kind of the secret store (ClusterSecretStore or SecretStore).
-    secretStoreKind: ClusterSecretStore
-    # -- How often ExternalSecrets poll for updates.
-    secretRefreshInterval: 1h
-
-  mariadbOperator:
-    # -- Pull in the mariadb-operator and mariadb-operator-crds charts as dependencies of this
-    # -- chart. Left unset (the default), this follows aodbApi.mariadb.enabled. Set explicitly
-    # -- to false to reuse a cluster-shared operator instead of installing a second copy.
-    # enabled: true
-
-  mariadb:
-    # -- Deploy a MariaDB instance (via the mariadb-operator's MariaDB CR) as part of this chart.
-    enabled: true
-    # -- Container image for MariaDB, passed through to the MariaDB CR.
-    image: "mariadb:11.4"
-    persistence:
-      # -- Enable persistent storage for MariaDB data.
-      enabled: true
-      # -- Size of the MariaDB CR's storage volume.
-      size: 2Gi
-      # -- StorageClass to use for the volume. Leave empty to use the cluster default.
-      storageClass: ""
-    # Controls how the MariaDB root credentials secret is managed.
-    # When unset or true: a K8s Secret is created by Helm with a randomly generated password.
-    # When false: an ExternalSecret pulls mariadb_root_password/mariadb_root_user from aodbApi.externalSecret.
-    # createSecret: true
-
-  db:
-    # -- Database name the app connects to.
-    name: "aodb"
-    # -- MySQL user the app connects as.
-    user: "aodbapi"
-    # Controls how the app's DB credentials secret is managed.
-    # When true or unset: a K8s Secret is created directly by Helm using db.password below.
-    # When false: an ExternalSecret pulls db_user/db_password/db_name from aodbApi.externalSecret.
-    createSecret: true
-    # -- Required when createSecret is true.
-    # password: ""
+  # -- Public HTTPS URL to the item dump zip (a zipped <aodb><item aoid="..." .../></aodb> XML
+  # -- file). Downloaded fresh into memory on every pod start - no database, no credentials.
+  dumpUrl: ""
 
   # -- Container image registry and repository for the aodb-api image.
   imageRepository: ghcr.io/zznathans/aodb-api
@@ -65,31 +22,6 @@ aodbApi:
   service:
     # -- Port the Service listens on and forwards to the container's 8000.
     port: 80
-
-  s3:
-    # -- Auto-import the item dump from S3 (or an S3-compatible store, e.g. Cloudflare R2) on
-    # -- startup, if the `items` table is empty. Meant for a dump that changes rarely - readiness
-    # -- is intentionally gated on this completing (see readinessProbe.initialDelaySeconds below).
-    enabled: false
-    # -- Bucket containing the dump object.
-    bucket: ""
-    # -- Object key/path of the dump within the bucket. A ".gz" suffix is auto-decompressed.
-    key: ""
-    # -- Endpoint host for non-AWS providers, without a scheme (e.g. "abc123.r2.cloudflarestorage.com").
-    # -- Leave empty to use AWS's default endpoint for the given region.
-    endpoint: ""
-    # -- Region (or "auto" for most S3-compatible providers, e.g. Cloudflare R2).
-    region: "auto"
-    # -- Name of an existing K8s Secret with access-key-id/secret-access-key keys, used when
-    # -- externalSecret.enabled is false. Required in that case.
-    credentialsSecret: ""
-    externalSecret:
-      # -- When true, create an ExternalSecret to populate the S3 credentials from the external
-      # -- store instead of requiring a pre-existing credentialsSecret.
-      enabled: false
-      # -- Name of the secret in the external store. Required when enabled is true. Must be a
-      # -- JSON object with keys: access_key (base64), secret_key (base64).
-      secretName: ""
 
   # -- Raw Kubernetes objects to render alongside chart-managed resources.
   extraObjects: []

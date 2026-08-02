@@ -22,45 +22,8 @@ spec:
           ports:
             - containerPort: 8000
           env:
-            - name: DB_HOST
-              value: {{ .Values.aodbApi.mariadb.enabled | ternary (printf "%s-mariadb" .Release.Name) "REQUIRED-set-aodbApi.mariadb.enabled-false-and-provide-DB_HOST-via-extraObjects" | quote }}
-            - name: DB_PORT
-              value: "3306"
-            - name: DB_NAME
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-db
-                  key: db_name
-            - name: DB_USER
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-db
-                  key: db_user
-            - name: DB_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Release.Name }}-db
-                  key: db_password
-            {{- if .Values.aodbApi.s3.enabled }}
-            - name: S3_BUCKET
-              value: {{ .Values.aodbApi.s3.bucket | quote }}
-            - name: S3_KEY
-              value: {{ .Values.aodbApi.s3.key | quote }}
-            - name: S3_ENDPOINT
-              value: {{ .Values.aodbApi.s3.endpoint | quote }}
-            - name: S3_REGION
-              value: {{ .Values.aodbApi.s3.region | quote }}
-            - name: S3_ACCESS_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.aodbApi.s3.credentialsSecret | default (printf "%s-s3-creds" .Release.Name) }}
-                  key: access-key-id
-            - name: S3_SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.aodbApi.s3.credentialsSecret | default (printf "%s-s3-creds" .Release.Name) }}
-                  key: secret-access-key
-            {{- end }}
+            - name: DUMP_URL
+              value: {{ required "aodbApi.dumpUrl is required" .Values.aodbApi.dumpUrl | quote }}
           securityContext:
             allowPrivilegeEscalation: false
             runAsNonRoot: true
@@ -75,15 +38,15 @@ spec:
             httpGet:
               path: /healthz
               port: 8000
-            # A first-boot S3 import (aodbApi.s3.enabled) blocks the app from accepting
-            # connections until it completes, so this needs enough headroom for a full dump load,
-            # not just normal app startup.
-            initialDelaySeconds: {{ .Values.aodbApi.s3.enabled | ternary 30 5 }}
-            periodSeconds: 10
-            failureThreshold: {{ .Values.aodbApi.s3.enabled | ternary 30 3 }}
+            # Every boot re-downloads and parses the dump before the app accepts connections
+            # (verified against the real ~5.7MB/125k-item dump: ~5-10s including network), so
+            # this needs more headroom than a typical stateless app's startup.
+            initialDelaySeconds: 15
+            periodSeconds: 5
+            failureThreshold: 12
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8000
-            initialDelaySeconds: {{ .Values.aodbApi.s3.enabled | ternary 60 10 }}
+            initialDelaySeconds: 30
             periodSeconds: 30

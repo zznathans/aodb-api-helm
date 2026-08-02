@@ -4,6 +4,7 @@ templates:
 tests:
   - it: renders a single deployment using the configured image
     set:
+      aodbApi.dumpUrl: https://aodb-api.s3.yeetbox.net/171003.xml.zip
       aodbApi.imageRepository: ghcr.io/zznathans/aodb-api
       aodbApi.imageTag: "1.2.3"
     asserts:
@@ -15,13 +16,25 @@ tests:
           path: spec.template.spec.containers[0].image
           value: ghcr.io/zznathans/aodb-api:1.2.3
 
-  - it: points DB_HOST at the in-chart mariadb by default
+  - it: passes dumpUrl through as DUMP_URL
+    set:
+      aodbApi.dumpUrl: https://aodb-api.s3.yeetbox.net/171003.xml.zip
     asserts:
       - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: DUMP_URL
+      - equal:
           path: spec.template.spec.containers[0].env[0].value
-          value: RELEASE-NAME-mariadb
+          value: https://aodb-api.s3.yeetbox.net/171003.xml.zip
+
+  - it: fails when dumpUrl is not set
+    asserts:
+      - failedTemplate:
+          errorMessage: "aodbApi.dumpUrl is required"
 
   - it: runs as a non-root user with hardened security context
+    set:
+      aodbApi.dumpUrl: https://aodb-api.s3.yeetbox.net/171003.xml.zip
     asserts:
       - equal:
           path: spec.template.spec.containers[0].securityContext.runAsNonRoot

@@ -24,12 +24,6 @@ jobs:
         with:
           version: "3.17.0"
 
-      - name: Add mariadb-operator repo
-        run: helm repo add mariadb-operator https://mariadb-operator.github.io/mariadb-operator
-
-      - name: Build chart dependencies
-        run: helm dependency build charts/aodb-api
-
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.7.0
         with:
