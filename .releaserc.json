@@ -4,6 +4,13 @@
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
+    ["@semantic-release/exec", {
+      "prepareCmd": "sh scripts/bump-chart-version.sh ${nextRelease.version}"
+    }],
+    ["@semantic-release/git", {
+      "assets": ["charts/aodb-api/Chart.yaml"],
+      "message": "chore(release): bump chart to ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+    }],
     ["@semantic-release/github", {
       "successComment": false,
       "failTitle": false
